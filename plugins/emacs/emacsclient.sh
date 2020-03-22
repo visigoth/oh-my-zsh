@@ -7,10 +7,10 @@ _emacsfun()
 
     if [ "$(echo "$frameslist" | sed -n '$=')" -ge 2 ] ;then
         # prevent creating another X frame if there is at least one present.
-        emacsclient --alternate-editor "" "$@"
+        exec emacsclient --alternate-editor "" "$@" 2>/dev/null
     else
         # Create one if there is no X window yet.
-        emacsclient --alternate-editor "" --create-frame "$@"
+        exec emacsclient --alternate-editor "" --create-frame "$@" 2>/dev/null
     fi
 }
 
