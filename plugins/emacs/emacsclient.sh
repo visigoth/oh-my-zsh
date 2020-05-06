@@ -2,15 +2,24 @@
 
 _emacsfun()
 {
-    # get list of emacs frames.
-    frameslist=`emacsclient --alternate-editor '' --eval '(frame-list)' 2>/dev/null | egrep -o '(frame)+'`
+    if [ -z "$ALTERNATE_EDITOR" ]; then
+        ALTERNATE_EDITOR="--alternate-editor=start-emacs-daemon"
+    else
+        ALTERNATE_EDITOR="-a \"$ALTERNATE_EDITOR\""
+    fi
+    if [ ! -z "$EMACS_DAEMON" ]; then
+        EMACSCLIENT_DAEMON="-s $HOME/.emacs.d/server/$EMACS_DAEMON"
+    fi
 
-    if [ "$(echo "$frameslist" | sed -n '$=')" -ge 2 ] ;then
+    # get list of emacs frames.
+    frameslist=`emacsclient $EMACSCLIENT_DAEMON $ALTERNATE_EDITOR --eval '(frame-list)' 2>/dev/null | egrep -o '(frame)+'`
+
+    if [ "$(echo "$frameslist" | sed -n '$=')" -ge 2 ]; then
         # prevent creating another X frame if there is at least one present.
-        exec emacsclient --alternate-editor "" "$@" 2>/dev/null
+        exec emacsclient $EMACSCLIENT_DAEMON $ALTERNATE_EDITOR "$@" 2>/dev/null
     else
         # Create one if there is no X window yet.
-        exec emacsclient --alternate-editor "" --create-frame "$@" 2>/dev/null
+        exec emacsclient $EMACSCLIENT_DAEMON $ALTERNATE_EDITOR -c "$@"
     fi
 }
 
