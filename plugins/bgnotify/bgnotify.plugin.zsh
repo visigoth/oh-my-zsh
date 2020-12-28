@@ -20,8 +20,20 @@ if ! (type bgnotify_formatted | grep -q 'function'); then ## allow custom functi
   }
 fi
 
+# Prime ability to get window id
+if [[ "$TERM_PROGRAM" == 'iTerm.app' ]]; then
+  _BGNOTIFY_TERMINAL_PID=$(
+    osascript -e 'tell application "System Events"' \
+    -e 'set x to first process whose name is "iTerm2"' \
+    -e 'return unix id of x' \
+    -e 'end'
+  )
+fi
+
 currentWindowId () {
-  if hash osascript 2>/dev/null; then #osx
+  if hash current_window_id 2>/dev/null && [[ $_BGNOTIFY_TERMINAL_PID != "" ]]; then # custom native binary for performance
+    current_window_id $_BGNOTIFY_TERMINAL_PID
+  elif hash osascript 2>/dev/null; then #osx
     osascript -e 'tell application (path to frontmost application as text) to id of front window' 2&> /dev/null || echo "0"
   elif (hash notify-send 2>/dev/null || hash kdialog 2>/dev/null); then #ubuntu!
     xprop -root 2> /dev/null | awk '/NET_ACTIVE_WINDOW/{print $5;exit} END{exit !$5}' || echo "0"
